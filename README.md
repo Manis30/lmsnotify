@@ -15,6 +15,11 @@ A full-stack web application designed to upload student data from Excel spreadsh
 - **Frontend**: React, Vite, CSS, React Icons
 - **Backend**: Node.js, Express, Multer, Nodemailer, SheetJS (`xlsx`), Dotenv
 
+## Live Deployments
+
+- **Frontend (Vercel)**: [https://lmsnotify.vercel.app/](https://lmsnotify.vercel.app/)
+- **Backend (Render)**: [https://lmsnotify.onrender.com](https://lmsnotify.onrender.com)
+
 ## Getting Started
 
 ### Prerequisites
@@ -38,6 +43,7 @@ MAIL_FROM=your_email@example.com
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 PORT=5000
+CLIENT_URL=https://lmsnotify.vercel.app/
 ```
 
 Start the backend server:
@@ -55,10 +61,25 @@ The backend server runs on `http://localhost:5000`.
 ```bash
 cd frontend
 npm install
+```
+
+Create a `.env` file in the `frontend/` directory based on `.env.example`:
+
+```env
+VITE_API_URL=https://lmsnotify.onrender.com
+```
+
+Run development server:
+
+```bash
 npm run dev
 ```
 
-The frontend application runs on `http://localhost:5173`.
+Build for production:
+
+```bash
+npm run build
+```
 
 ## License
 

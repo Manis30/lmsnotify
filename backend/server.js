@@ -12,9 +12,51 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS and JSON parsing
-app.use(cors());
+// Configure allowed origins for CORS
+const rawClientUrl = process.env.CLIENT_URL || "https://lmsnotify.vercel.app";
+const configuredOrigins = rawClientUrl
+  .split(",")
+  .map((url) => url.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set([
+    ...configuredOrigins,
+    "https://lmsnotify.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000"
+  ])
+);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+      if (
+        allowedOrigins.includes(normalizedOrigin) ||
+        normalizedOrigin.endsWith(".vercel.app") ||
+        normalizedOrigin.includes("localhost")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
 app.use(express.json());
+
+// Root health-check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "LMS-Notify Backend API is running",
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, "uploads");

@@ -23,6 +23,9 @@ import {
   FiX
 } from 'react-icons/fi';
 
+// Backend API base URL from Vite environment variable or Render default
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://lmsnotify.onrender.com').replace(/\/+$/, '');
+
 function App() {
   // Application State
   const [selectedFile, setSelectedFile] = useState(null);
@@ -113,16 +116,22 @@ function App() {
     formData.append('file', selectedFile);
 
     try {
-      let response = await fetch('/send-mails', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok && response.status === 404) {
-        response = await fetch('http://localhost:5000/send-mails', {
+      let response;
+      try {
+        response = await fetch(`${API_BASE_URL}/send-mails`, {
           method: 'POST',
           body: formData,
         });
+      } catch (networkErr) {
+        // Fallback to relative endpoint if API_BASE_URL is not relative and failed
+        if (API_BASE_URL !== '') {
+          response = await fetch('/send-mails', {
+            method: 'POST',
+            body: formData,
+          });
+        } else {
+          throw networkErr;
+        }
       }
 
       const data = await response.json();
@@ -142,28 +151,10 @@ function App() {
       }
     } catch (err) {
       console.error('Error sending mails:', err);
-      try {
-        const fallbackResponse = await fetch('http://localhost:5000/send-mails', {
-          method: 'POST',
-          body: formData,
-        });
-        const fallbackData = await fallbackResponse.json();
-        if (fallbackResponse.ok && fallbackData.success) {
-          const timeStr = getFormattedTimestamp();
-          setSentTimestamp(timeStr);
-          const updatedResults = (fallbackData.results || []).map((row) => ({
-            ...row,
-            sentAt: timeStr
-          }));
-          setMailStatusList(fallbackData.results || []);
-          setMailSent(true);
-          setCurrentPage(1);
-        } else {
-          setStatusBanner({ message: fallbackData.message || 'Failed to process email sending.', type: 'error' });
-        }
-      } catch (fallbackErr) {
-        setStatusBanner({ message: 'Server connection error. Make sure backend is running on port 5000.', type: 'error' });
-      }
+      setStatusBanner({
+        message: 'Server connection error. Please make sure the backend service is running and reachable.',
+        type: 'error'
+      });
     } finally {
       setIsSending(false);
     }
