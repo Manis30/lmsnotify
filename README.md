@@ -63,11 +63,9 @@ cd frontend
 npm install
 ```
 
-Create a `.env` file in the `frontend/` directory based on `.env.example`:
-
-```env
-VITE_API_URL=https://lmsnotify.onrender.com
-```
+The frontend is pre-configured with environment profiles:
+- `.env.development` points to local backend (`http://localhost:5000`)
+- `.env.production` points to live Render backend (`https://lmsnotify.onrender.com`)
 
 Run development server:
 

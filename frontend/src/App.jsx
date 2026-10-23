@@ -23,8 +23,14 @@ import {
   FiX
 } from 'react-icons/fi';
 
-// Backend API base URL from Vite environment variable or Render default
-const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://lmsnotify.onrender.com').replace(/\/+$/, '');
+// Resolve Backend API base URL:
+// - Uses explicit VITE_API_URL if configured
+// - In local dev (npm run dev): defaults to http://localhost:5000
+// - In production (npm run build): defaults to https://lmsnotify.onrender.com
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? 'http://localhost:5000' : 'https://lmsnotify.onrender.com')
+).replace(/\/+$/, '');
 
 function App() {
   // Application State

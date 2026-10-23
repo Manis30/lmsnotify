@@ -36,7 +36,7 @@ app.use(
       if (
         allowedOrigins.includes(normalizedOrigin) ||
         normalizedOrigin.endsWith(".vercel.app") ||
-        normalizedOrigin.includes("localhost")
+        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalizedOrigin)
       ) {
         return callback(null, true);
       }
@@ -71,8 +71,19 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Multer upload configuration
-const upload = multer({ dest: "uploads/" });
+// Multer upload configuration with security limits (max 10MB, Excel only)
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (ext === ".xlsx" || ext === ".xls") {
+      cb(null, true);
+    } else {
+      cb(new Error("Invalid file type. Only Excel files (.xlsx, .xls) are allowed."));
+    }
+  }
+});
 
 // In-memory status storage for the latest mail operation
 let mailStatus = [];
@@ -92,21 +103,35 @@ const transporter = nodemailer.createTransport({
   pool: true,
   maxConnections: 3,
   maxMessages: 200,
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 30000,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 60000,
+  tls: {
+    rejectUnauthorized: false
+  },
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
   }
 });
 
+// Helper to escape HTML characters to prevent XSS / HTML injection in emails
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 /**
  * Builds a professional HTML Newsletter compatible with Gmail & common email clients.
  * Uses XHTML 1.0 Transitional, 600px table layout, and inline CSS.
  */
 function buildEmailHtml(name) {
-  const recipientName = name ? String(name).trim() : "Educator";
+  const recipientName = name ? escapeHtml(String(name).trim()) : "Educator";
   const currentYear = new Date().getFullYear();
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -340,14 +365,26 @@ app.post("/send-mails", upload.single("file"), async (req, res) => {
       });
     }
 
+    if (data.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: "File exceeds the maximum limit of 500 recipients per upload."
+      });
+    }
+
     const results = [];
     let sentCount = 0;
     let failedCount = 0;
 
     // Send individual personalized HTML emails
     for (const row of data) {
-      const name = row.Name ? String(row.Name).trim() : "";
-      const email = row.Email ? String(row.Email).trim() : "";
+      // Find case-insensitive keys for Name and Email (e.g. name, Name, NAME, email, Email, EMAIL)
+      const rowKeys = Object.keys(row);
+      const nameKey = rowKeys.find((k) => /^name$/i.test(k.trim())) || "Name";
+      const emailKey = rowKeys.find((k) => /^email$/i.test(k.trim())) || "Email";
+
+      const name = row[nameKey] ? String(row[nameKey]).trim() : "";
+      const email = row[emailKey] ? String(row[emailKey]).trim() : "";
 
       // Validate presence of Name, Email, and Email format
       if (!name || !email || !isValidEmail(email)) {
@@ -453,15 +490,27 @@ app.use((err, req, res, next) => {
 });
 
 // Start Express server
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
-  try {
-    await transporter.verify();
-    console.log(`SMTP connection verified successfully on port ${process.env.SMTP_PORT || "587"}.`);
-  } catch (err) {
-    console.error("SMTP connection verification failed:", getSmtpErrorMessage(err));
-    if (err.message && !err.message.includes(getSmtpErrorMessage(err))) {
-      console.error("Raw SMTP error:", err.message);
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    try {
+      await transporter.verify();
+      console.log(`SMTP connection verified successfully on port ${process.env.SMTP_PORT || "587"}.`);
+    } catch (err) {
+      console.warn("SMTP verification notice:", getSmtpErrorMessage(err));
+      if (err.message && !err.message.includes(getSmtpErrorMessage(err))) {
+        console.warn("Raw SMTP info:", err.message);
+      }
     }
+  } else {
+    console.log("Notice: EMAIL_USER / EMAIL_PASSWORD not provided in environment variables.");
+  }
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use. Please stop the existing process or run with PORT=<another_port>.`);
+  } else {
+    console.error("Server error:", err.message);
   }
 });
