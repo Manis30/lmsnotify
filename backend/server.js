@@ -57,6 +57,8 @@ const getHealthStatus = (req, res) => {
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     service: "lms-notify-backend",
+    smtpConfigured: Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD),
+    smtpPort: parseInt(process.env.SMTP_PORT || "2525", 10),
     environment: process.env.NODE_ENV || "production"
   });
 };
@@ -97,7 +99,7 @@ const senderName = "LMS Notify Team";
 // Configure global pooled Nodemailer transporter (Brevo SMTP)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-  port: parseInt(process.env.SMTP_PORT || "587", 10),
+  port: parseInt(process.env.SMTP_PORT || "2525", 10),
   secure: process.env.SMTP_SECURE === "true",
   requireTLS: true,
   pool: true,
@@ -495,7 +497,7 @@ const server = app.listen(PORT, async () => {
   if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
     try {
       await transporter.verify();
-      console.log(`SMTP connection verified successfully on port ${process.env.SMTP_PORT || "587"}.`);
+      console.log(`SMTP connection verified successfully on port ${process.env.SMTP_PORT || "2525"}.`);
     } catch (err) {
       console.warn("SMTP verification notice:", getSmtpErrorMessage(err));
       if (err.message && !err.message.includes(getSmtpErrorMessage(err))) {
