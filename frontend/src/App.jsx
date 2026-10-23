@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import {
   FiMail,
@@ -31,6 +31,13 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [statusBanner, setStatusBanner] = useState({ message: '', type: '' });
+
+  // Warm up Render backend on page load to avoid cold-start delays
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/health`).catch(() => {
+      // Non-blocking background warm-up
+    });
+  }, []);
   
   // Mail sending state
   const [mailSent, setMailSent] = useState(false);
@@ -134,7 +141,19 @@ function App() {
         }
       }
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = {
+          success: false,
+          message: response.status === 502 || response.status === 503
+            ? 'Backend service is starting up on Render. Please wait 15 seconds and try again.'
+            : (text || `Server returned HTTP ${response.status}`)
+        };
+      }
 
       if (response.ok && data.success) {
         const timeStr = getFormattedTimestamp();

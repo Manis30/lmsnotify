@@ -49,14 +49,21 @@ app.use(
 );
 app.use(express.json());
 
-// Root health-check endpoint
-app.get("/", (req, res) => {
-  res.json({
+// Health check endpoints
+const getHealthStatus = (req, res) => {
+  res.status(200).json({
     status: "ok",
-    message: "LMS-Notify Backend API is running",
-    timestamp: new Date().toISOString()
+    message: "LMS-Notify Backend API is healthy",
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    service: "lms-notify-backend",
+    environment: process.env.NODE_ENV || "production"
   });
-});
+};
+
+app.get("/", getHealthStatus);
+app.get("/health", getHealthStatus);
+app.get("/api/health", getHealthStatus);
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, "uploads");
@@ -425,6 +432,23 @@ app.get("/status", (req, res) => {
     sent: sent,
     failed: failed,
     results: mailStatus
+  });
+});
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`
+  });
+});
+
+// Centralized error-handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal server error"
   });
 });
 
