@@ -40,6 +40,7 @@ function App() {
 
   // Warm up Render backend on page load to avoid cold-start delays
   useEffect(() => {
+    console.log('[LMS-Notify] Initialized frontend v1.0.1 - API Base:', API_BASE_URL);
     fetch(`${API_BASE_URL}/health`).catch(() => {
       // Non-blocking background warm-up
     });
