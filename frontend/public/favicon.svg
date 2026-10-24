@@ -1,7 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#6366F1"/>
-  <path d="M6 10C6 8.89543 6.89543 8 8 8H24C25.1046 8 26 8.89543 26 10V22C26 23.1046 25.1046 24 24 24H8C6.89543 24 6 23.1046 6 22V10Z" fill="#4F46E5"/>
-  <path d="M6 10L16 17L26 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="23" cy="9" r="3.5" fill="#10B981"/>
-  <path d="M21.5 9L22.5 10L24.5 8" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B3D"/>
+      <stop offset="50%" stop-color="#FF5017"/>
+      <stop offset="100%" stop-color="#D94310"/>
+    </linearGradient>
+    <linearGradient id="claudeStarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF5"/>
+      <stop offset="100%" stop-color="#FFEEDD"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#202B49" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Container with Claude Terracotta / TeqCertify Orange -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)"/>
+
+  <!-- Mail Envelope Body -->
+  <rect x="10" y="16" width="44" height="34" rx="6" fill="#FFFFFF" fill-opacity="0.18" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  
+  <!-- Envelope Flap V-Line -->
+  <path d="M11 18L32 34L53 18" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Claude Starburst Motif Centered on Envelope -->
+  <g transform="translate(32, 33) scale(0.95)" filter="url(#softShadow)">
+    <!-- Claude Asterisk / Starburst 8-pointed Geometry -->
+    <path d="
+      M 0 -11 C 0.8 -4, 4 -0.8, 11 0 C 4 0.8, 0.8 4, 0 11 C -0.8 4, -4 0.8, -11 0 C -4 -0.8, -0.8 -4, 0 -11 Z
+    " fill="url(#claudeStarGrad)"/>
+    
+    <!-- Diagonal Claude rays -->
+    <path d="
+      M -7 -7 C -2.5 -2.5, -2.5 -2.5, 0 0 C -2.5 2.5, -2.5 2.5, -7 7 C -2.5 2.5, -2.5 2.5, 0 0 C 2.5 -2.5, 2.5 -2.5, 7 -7 Z
+    " fill="#FFE0CC" opacity="0.8"/>
+
+    <!-- Claude Star Center Core -->
+    <circle cx="0" cy="0" r="2.4" fill="#FF5017"/>
+  </g>
+
+  <!-- Top Right Mini AI Sparkle -->
+  <path d="M47 8 L48 12 L52 13 L48 14 L47 18 L46 14 L42 13 L46 12 Z" fill="#FFE8D6"/>
 </svg>
