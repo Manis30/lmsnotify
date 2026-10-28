@@ -582,6 +582,12 @@ body:has(.app-viewport-upload) {
   border-color: var(--color-primary-tint);
 }
 
+.stat-card.is-active-filter {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-tint), var(--shadow-lg);
+  background: #FFFDFB;
+}
+
 .stat-card-left {
   display: flex;
   align-items: flex-start;

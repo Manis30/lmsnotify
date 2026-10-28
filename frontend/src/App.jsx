@@ -612,6 +612,43 @@ function App() {
     setActiveActionMenu(null);
   };
 
+  // Helper to determine if recipient matches selected status filter
+  const matchesDeliveryFilter = (itemStatus, targetFilter, item = {}) => {
+    if (!targetFilter || targetFilter === 'All') return true;
+
+    if (targetFilter === 'Delivered') {
+      // Delivered means confirmed delivery to inbox (includes subsequent engagement like Opened or Clicked)
+      return itemStatus === 'Delivered' || itemStatus === 'Opened' || itemStatus === 'Clicked';
+    }
+
+    if (targetFilter === 'Opened') {
+      // Opened means opened or clicked (click implies open engagement) or recorded opens > 0
+      return itemStatus === 'Opened' || itemStatus === 'Clicked' || (Number(item.openCount) > 0);
+    }
+
+    if (targetFilter === 'Clicked') {
+      return itemStatus === 'Clicked' || (Number(item.clickCount) > 0);
+    }
+
+    if (targetFilter === 'Sent') {
+      return itemStatus === 'Sent';
+    }
+
+    if (targetFilter === 'Bounced') {
+      return itemStatus === 'Bounced';
+    }
+
+    if (targetFilter === 'Blocked') {
+      return itemStatus === 'Blocked';
+    }
+
+    if (targetFilter === 'Failed') {
+      return itemStatus === 'Failed';
+    }
+
+    return itemStatus === targetFilter;
+  };
+
   // Multi-field Combined Filter logic
   const filteredResults = useMemo(() => {
     return mailStatusList.filter((item) => {
@@ -621,7 +658,7 @@ function App() {
       const matchesEmail = item.email
         ? String(item.email).toLowerCase().includes(emailSearch.toLowerCase().trim())
         : false;
-      const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
+      const matchesStatus = matchesDeliveryFilter(item.status, statusFilter, item);
       return matchesName && matchesEmail && matchesStatus;
     });
   }, [mailStatusList, nameSearch, emailSearch, statusFilter]);
@@ -799,7 +836,15 @@ function App() {
             {/* Statistics Cards Grid (4 Cards with SVG Progress Rings) */}
             <div className="stat-cards-grid">
               {/* Card 1: TOTAL RECIPIENTS */}
-              <div className="stat-card">
+              <div
+                className={`stat-card ${statusFilter === 'All' ? 'is-active-filter' : ''}`}
+                onClick={() => {
+                  setStatusFilter('All');
+                  setCurrentPage(1);
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Filter: Show All Recipients"
+              >
                 <div className="stat-card-left">
                   <div className="stat-icon-wrapper icon-orange">
                     <Users size={20} />
@@ -816,7 +861,15 @@ function App() {
               </div>
 
               {/* Card 2: DELIVERED */}
-              <div className="stat-card">
+              <div
+                className={`stat-card ${statusFilter === 'Delivered' ? 'is-active-filter' : ''}`}
+                onClick={() => {
+                  setStatusFilter((prev) => (prev === 'Delivered' ? 'All' : 'Delivered'));
+                  setCurrentPage(1);
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Filter: Show Delivered Recipients"
+              >
                 <div className="stat-card-left">
                   <div className="stat-icon-wrapper icon-green">
                     <Send size={20} />
@@ -831,7 +884,15 @@ function App() {
               </div>
 
               {/* Card 3: OPENED (ESTIMATED) */}
-              <div className="stat-card">
+              <div
+                className={`stat-card ${statusFilter === 'Opened' ? 'is-active-filter' : ''}`}
+                onClick={() => {
+                  setStatusFilter((prev) => (prev === 'Opened' ? 'All' : 'Opened'));
+                  setCurrentPage(1);
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Filter: Show Opened Recipients"
+              >
                 <div className="stat-card-left">
                   <div className="stat-icon-wrapper icon-purple">
                     <Mail size={20} />
@@ -846,7 +907,15 @@ function App() {
               </div>
 
               {/* Card 4: BOUNCED */}
-              <div className="stat-card">
+              <div
+                className={`stat-card ${statusFilter === 'Bounced' ? 'is-active-filter' : ''}`}
+                onClick={() => {
+                  setStatusFilter((prev) => (prev === 'Bounced' ? 'All' : 'Bounced'));
+                  setCurrentPage(1);
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Filter: Show Bounced Recipients"
+              >
                 <div className="stat-card-left">
                   <div className="stat-icon-wrapper icon-danger">
                     <TriangleAlert size={20} />
