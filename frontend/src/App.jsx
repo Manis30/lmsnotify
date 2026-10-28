@@ -631,7 +631,8 @@ function App() {
     }
 
     if (targetFilter === 'Sent') {
-      return itemStatus === 'Sent';
+      // Sent means successfully dispatched to the mail relay (excludes pre-validation or send Failed)
+      return itemStatus !== 'Failed';
     }
 
     if (targetFilter === 'Bounced') {
